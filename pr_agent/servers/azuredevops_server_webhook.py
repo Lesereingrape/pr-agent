@@ -73,8 +73,9 @@ async def handle_request_comment(url: str, body: str, thread_id: int, comment_id
                 propagate_tool_errors=True)
             if handled and not is_question:
                 provider.set_thread_status(thread_id, "closed")
-            if handled:
-                provider.remove_initial_comment()
+            # The progress reply was posted before the command ran, so a failed run still has to
+            # take it back; only closing the thread depends on the outcome.
+            provider.remove_initial_comment()
     except Exception as e:
         get_logger().exception("Failed to handle webhook", artifact={"url": url, "body": body}, error=str(e))
 

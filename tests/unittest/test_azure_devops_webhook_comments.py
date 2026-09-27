@@ -333,14 +333,15 @@ async def _run_comment_command(body, tool_class, monkeypatch):
 
 
 async def test_swallowed_tool_failure_does_not_resolve_the_thread(monkeypatch):
-    """Resolving the discussion and deleting the progress comment on a run that raised inside the
-    tool leaves the author a closed thread and no review, so the handler must demand an honest
-    verdict the way the GitHub comment path does."""
+    """Resolving the discussion on a run that raised inside the tool leaves the author a closed
+    thread and no review, so the handler must demand an honest verdict the way the GitHub comment
+    path does. The "On it!" reply is posted before the command runs, so it still has to be cleaned
+    up on that failed run, like the temporary comments the tools remove in their finally blocks."""
 
     provider, tool = await _run_comment_command("/review", _SwallowingReview, monkeypatch)
 
     provider.set_thread_status.assert_not_called()
-    provider.remove_initial_comment.assert_not_called()
+    provider.remove_initial_comment.assert_called_once()
     assert tool.observed_propagation is True
 
 
